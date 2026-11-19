@@ -13,3 +13,8 @@ __pycache__/
 
 # personal study notes, not part of the submission
 /docs/
+
+# LaTeX build outputs
+report/*.aux
+report/*.log
+report/*.out
