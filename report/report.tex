@@ -2,127 +2,176 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[margin=2.2cm]{geometry}
+\usepackage[hmargin=2.1cm,vmargin=1.7cm]{geometry}
 \usepackage{amsmath}
 \usepackage{booktabs}
-\usepackage{tabularx}
 \usepackage{graphicx}
-\usepackage{enumitem}
+\usepackage[font=small,labelfont=bf]{caption}
 \usepackage[hidelinks]{hyperref}
 \usepackage{titlesec}
+\titlespacing*{\section}{0pt}{9pt}{3pt}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+\setlength{\textfloatsep}{8pt}
+\setlength{\intextsep}{8pt}
+\emergencystretch=2em
 
 \graphicspath{{figs/}}
-\setlist{itemsep=1pt,topsep=3pt}
-\titlespacing*{\section}{0pt}{10pt}{4pt}
-\setlength{\parskip}{4pt}
-\setlength{\parindent}{0pt}
 \newcommand{\var}[1]{\texttt{#1}}
 \newcommand{\qs}{\var{quote\_signal}}
 \newcommand{\mi}{\var{market\_index}}
-\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\title{Predicting truckload posted rates for November and December 2025}
+\author{Machine Learning Engineer assessment\\[2pt]
+\small Code: \url{https://github.com/JanusAdamus/freight-rate-prediction}}
+\date{}
 
 \begin{document}
+\maketitle
+\vspace{-1.5em}
 
-{\Large\bfseries Freight Rate Prediction: Approach and Validation}\par
-\vspace{2pt}
-{\small Machine Learning Engineer assessment\\Code: \url{https://github.com/JanusAdamus/freight-rate-prediction}}\par
-\vspace{6pt}
+\begin{abstract}
+\noindent
+This report describes a model that predicts the price posted for a truckload shipment, or load.
+It learns from 48,000 loads posted between January and October 2025 and then predicts 12,000 loads posted in November and December.
+When it was tested on two months it had not seen, its predictions missed the true price by \$42 per load on average, which is 1.8\% of a typical rate.
+A simple rule that predicts the usual price of each route misses by \$88.
+Most of the gain came from choosing what to leave out: two fields, \qs\ and \mi, look useful in the training months but mislead in the months to predict, so the final model ignores both.
+\end{abstract}
 
-The final model predicts each load's rate with a mean absolute error of \textbf{\$42 (1.8\%)} on months it never saw, against \$88 for a lane-median baseline.  The decisions that matter most were about the data: two of the provided signals look predictive but fail on November--December, so the model leaves them out.
+\section{The task}
 
-\section{Data split and validation approach}
+Each load has a pickup city and a delivery city, a road distance, a weight, an equipment type and a posting date, and the goal is to predict its posted rate in dollars; divided by the distance, that rate becomes the rate per mile.
+Because the training data ends in October, the model has to work on months that lie entirely in its future, and every test below was designed with that condition in mind.
 
-The task is to predict November--December from January--October, so \textbf{all validation is split by time, never at random}.  A random split lets the model learn from days on both sides of each test day and overstates accuracy.  Each holdout answers one question:
+\section{How the model was tested}
 
-\begin{table}[h]
-\centering\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{3.4cm} L}
-\toprule
-Holdout & Train on & Evaluate on & Question it answers \\
-\midrule
-Time & Jan--Aug & Sep--Oct (9,523 loads) & Does it work on future months? \\
-Time + unseen cities & Jan--Aug minus 8 random cities & Sep--Oct loads touching them; 20 draws & Does it work for new cities?  8 validation cities (12\% of loads) are absent from training. \\
-August & Jan--Jul & August & Does it work when \qs\ is noise, as in Nov--Dec? \\
-Rolling origin & months $< k$ & months $k$, $k{+}1$ & Do model choices hold across cut-offs? \\
-\bottomrule
-\end{tabularx}
-\end{table}
+To judge a model honestly, part of the data must be kept away from it during training and used only to measure its error.
+That reserved part is called a holdout.
+Since the real task is to predict later months, each holdout here is chosen by date: the model learns from earlier months and is scored on later ones.
+A random choice would put loads from the same day on both sides, and since those loads face the same market, the error would look smaller than the one the model will make in December.
 
-\textbf{Statistical checks.}  Model comparisons use a Diebold--Mariano test on daily mean absolute errors with Newey--West variance (days, not loads, are the unit of dependence), backed by a Wilcoxon signed-rank test and Holm correction across the primary tests.  An adversarial classifier (Sep--Oct vs validation) reaches AUC 0.51 without coordinates, so apart from the new cities the validation loads look like recent training data.
+The main test, therefore, trains on January to August and scores September and October, which together hold 9,523 loads.
+Three further tests each probe one specific risk.
+The first concerns new cities.
+Eight cities in the November--December file, which carry 12\% of its loads, never appear in the training data, so the test removes eight random cities from the training months and scores the model only on the September and October loads that touch them; it repeats this with 20 different sets of cities.
+The second test trains on January to July and scores August, for a reason that Section~\ref{sec:qs} explains.
+The third moves the boundary between training and scored months forward one month at a time, which shows whether the choice of model depends on where that boundary happens to fall.
 
-\section{Key findings from the data}
+Comparing two models also requires care, because a difference in average error may be luck.
+For that reason, errors are averaged by day and compared with a Diebold--Mariano test, which asks whether the average daily difference could be zero while allowing for consecutive days that err in the same direction.
+A Wilcoxon test checks the same question, and Holm's correction raises the bar, since several comparisons are made at once.
+Finally, a classifier asked to tell September--October loads apart from November--December loads, with coordinates hidden, did no better than a coin toss (AUC 0.51, where 0.5 is pure chance).
+Apart from the eight new cities, then, the loads to predict look like the most recent ones the model saw.
 
-\textbf{1. \qs\ switches meaning by month.}  It equals the true rate per mile ($\pm$1\%) in Jan, Feb, Mar, Jun and Sep, is inversely related to it in Apr, May, Jul and Oct, and is unrelated in August.  A per-day correlation between \qs\ and a quote-free model's prediction needs no labels, so it also classifies validation: November and December are noise months.  Their \qs\ distribution matches August's (Kolmogorov--Smirnov $p = 0.92$).
+\section{Two fields that mislead}
 
-\begin{center}
-\includegraphics[width=0.8\textwidth]{quote_signal_regimes.png}
-\end{center}
+\subsection{\qs}\label{sec:qs}
 
-Including \qs\ looks excellent on Sep--Oct (\$32), only because September is a ``direct'' month.  On August it triples the error (\$114 vs \$40).  \textbf{It is excluded.}
+At first sight, \qs\ is the most useful field in the data, because in January, February, March, June and September it equals the true rate per mile to within 1\%.
+In the other months, however, it behaves differently.
+In April, May, July and October it moves in the opposite direction to the price, staying close to 4.22 divided by the rate per mile, and in August it bears no relation to price at all.
 
-\textbf{2. \mi\ does not generalise across months.}  It tracks daily prices within a month, but January and September share the same index (0.93 and 0.89) at different price levels (\$2.03 and \$2.16 per mile).  Adding it raises Sep--Oct MAE from \$42 to \$117.  Weekly-only, lagged, trend-adjusted and monotone versions did not help either.  \textbf{It is excluded.}
+Which of these three behaviours a month follows can be detected without knowing any prices.
+For each day, the logarithm of \qs\ is correlated with the prediction of a model that never saw the field.
+A strong positive correlation marks a day where \qs\ tracks the price, a strong negative one a day where it is inverted, and a correlation near zero a day of noise.
+Applied to November and December, this test places both months in the third group, alongside August (Figure~\ref{fig:qs}).
+A Kolmogorov--Smirnov test, which compares two distributions, confirms the resemblance: it detects no difference between the values of \qs\ in November--December and in August ($p = 0.92$).
 
-\textbf{3. Seasonality is real but not forecastable here.}  Prices vary 7.7\% across months (Kruskal--Wallis $p < 10^{-40}$) and 1.7\% by day of week.  No holiday effect was detected ($p = 0.09$).  No available input anticipates the Nov--Dec level, so the model predicts the yearly average level plus a day-of-week effect.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\textwidth]{quote_signal_regimes.png}
+\caption{For each month, the average daily correlation between the logarithm of \qs\ and the prediction of a model that never saw it. November and December behave like August.}
+\label{fig:qs}
+\end{figure}
 
-\section{Data-quality issues and how they were handled}
+This finding also explains why the main test alone would have been misleading.
+September happens to be a month in which \qs\ tracks the price, so a model that uses the field scores \$32 on September and October, better than the final model.
+In August, however, the same model misses by \$114, nearly three times as much (Table~\ref{tab:results}).
+Since November and December resemble August, the final model does not use \qs.
 
-\begin{table}[h]
-\centering\small
-\begin{tabularx}{\textwidth}{L L L}
-\toprule
-Issue & Evidence & Handling \\
-\midrule
-1.4\% of rates are entry errors & Rate per mile at 0.2--0.4$\times$ or 2.4--4.7$\times$ the lane norm, with an empty gap in between.  In direct months, \qs\ for those loads is normal (0.99$\times$ the lane). & Dropped from training (outside \$1.2--\$4.0 per mile).  Metrics reported with and without them. \\
-Negative weights (0.6\% train, 1.2\% validation) & In a regression of the price residual, the sign has no effect ($p = 0.84$) while $\log|\text{weight}|$ does. & Absolute value. \\
-Missing weight and \mi & 300 and 374 rows in training. & Left as missing for the model. \\
-Perturbed coordinates & Boston at latitude 39.3; longitudes clipped at $-69.5$, a latitude at 25.5. & Used as approximate positions, no city names. \\
-Distance noise & Same lane has several distances; some rows at a 70-mile floor. & Kept; the model sees distance and detour ratio. \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\subsection{\mi}
 
-\section{Model}
+The market index follows daily prices within a month, but its scale drifts from one month to the next.
+As a result, January and September have nearly the same index, 0.93 and 0.89, even though their prices differ, \$2.03 and \$2.16 per mile.
+A model reads the index as a price level and is misled by this drift: adding it raises the September--October error from \$42 to \$117.
+Weekly, delayed and detrended versions of the index did not help either, so the final model leaves it out as well.
 
-\begin{itemize}
-\item \textbf{Target:} $\log(\text{rate}/\text{distance})$.  It removes the distance scale and makes errors relative.  Prediction $= e^{\hat y}\times$ distance.
-\item \textbf{Algorithm:} scikit-learn \var{HistGradientBoostingRegressor}, squared loss, 31 leaves, monotone constraints (heavier $\Rightarrow$ not cheaper; longer $\Rightarrow$ not pricier per mile).  Gradient boosting fits the non-linear distance curve and the lane $\times$ equipment $\times$ weight interactions.
-\item \textbf{Features:} distance, pickup and delivery coordinates and their differences, straight-line distance, detour ratio, equipment, weight and day of week.  City names are left out so that unseen cities are priced from their location.
-\item \textbf{Alternatives tested:} a ridge model with lane fixed effects, a two-stage ridge plus boosting, and boosting with lane target encoding.  All lost on unseen cities (MAE \$49--\$71).
-\end{itemize}
+\section{What else the data contain}
+
+Prices follow a season.
+The average rate per mile varies by 7.7\% from one month to another (Kruskal--Wallis test, $p < 10^{-40}$) and by 1.7\% across the days of the week, while holidays show no separate effect ($p = 0.09$).
+
+The data also contain errors.
+About 1.4\% of rates lie far from the rest of their route: either 0.2 to 0.4 times or 2.4 to 4.7 times its typical rate per mile, with almost no loads in between.
+In the months where \qs\ tracks the price, its value for these same loads is normal, 0.99 times the usual rate of the route.
+The market, in other words, quoted a normal price, and the posted rate was typed wrongly.
+For that reason, rates outside \$1.2 to \$4.0 per mile are removed from training, and the results below are given both with and without them.
+
+Smaller defects were handled more simply.
+Weights are negative for 0.6\% of training loads, and since the sign has no effect on price ($p = 0.84$) while the size does, the minus sign is dropped.
+Missing weights (300 rows) and missing index values (374) are left to the model, which accepts them directly.
+The coordinates have been blurred (Boston appears at latitude 39.3) and some distances sit at a floor of 70 miles; both were kept, because the model also sees the ratio of road to straight-line distance.
+
+\section{The model}
+
+The model learns the logarithm of the rate per mile, $y = \log(\text{rate}/\text{distance})$.
+Dividing by distance removes most of the gap between a 100-mile and a 2,000-mile load.
+The logarithm, in turn, turns errors into proportions, so that a \$20 miss on a short haul counts the same as a \$200 miss on a long one.
+To recover the rate, the prediction is converted back as $e^{\hat y}$ times the distance.
+
+The learner is gradient boosting (scikit-learn's \var{HistGradientBoostingRegressor}), which builds hundreds of small decision trees, each one correcting the errors left by the trees before it.
+Two constraints force it to respect what any dispatcher knows: a heavier load is never cheaper, and a longer one is never more expensive per mile.
+Its inputs are the distance, the coordinates of both ends and the differences between them, the straight-line distance and its ratio to the road distance, the equipment type, the weight and the day of the week.
+City names are deliberately absent, so that a city the model has never seen is priced from its location.
+Three other approaches were tried, and each of them learns an average price per route.
+That is precisely their weakness, since a new city has no route history: on new cities they missed by \$49 to \$71, against \$46 for the final model.
 
 \section{Results}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering\small
+\caption{Average error per load in dollars (MAE) and as a percentage of the rate (MAPE), on loads with valid prices. The new-city column averages 20 random sets of eight cities.}
+\label{tab:results}
 \begin{tabular}{lcccc}
 \toprule
-& \multicolumn{2}{c}{Time (Sep--Oct)} & Unseen cities & August \\
+& \multicolumn{2}{c}{Sep--Oct} & New cities & August \\
 \cmidrule(lr){2-3}
-Method & MAE & MAPE & MAE (20 draws) & MAE \\
+Model & MAE & MAPE & MAE & MAE \\
 \midrule
-Lane-median baseline & \$88.15 & 3.74\% & \$185.20 & \$92.03 \\
-\textbf{Final model} & \textbf{\$42.24} & \textbf{1.81\%} & \textbf{\$46.37} & \textbf{\$39.90} \\
+Usual price of the route & \$88.15 & 3.74\% & \$185.20 & \$92.03 \\
+Final model & \$42.24 & 1.81\% & \$46.37 & \$39.90 \\
 Final + \mi & \$116.99 & 4.87\% & -- & \$66.44 \\
 Final + \qs & \$32.00 & 1.31\% & -- & \$114.31 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-MAE and MAPE on rows with clean labels.  On all rows, including label errors, the final model's Sep--Oct MAE is \$98.  The model beats the baseline on every day of both time holdouts and in 20 of 20 unseen-city draws (sign test $p \approx 10^{-6}$).  Five random seeds move individual predictions by 0.28\% (median).  A split-conformal 80\% interval is $\pm$3.1\% and covered 82.7\% of October loads.
+The final model has a smaller daily error than the usual route price on every day of both date-based tests and in all 20 sets of new cities, which would happen by chance with a probability of about one in a million (sign test).
+When the mistyped rates are kept in the score, the September--October error rises to \$98, which means that those few loads account for more than half of it.
+The predictions are also stable: retraining with five different random seeds moves each one by 0.28\% (median).
+Each prediction can carry a range as well.
+Built from the errors on unseen data (the split-conformal method), a range of $\pm$3.1\% should contain the true rate 80\% of the time, and in October it did so 82.7\% of the time.
 
-\section{December prediction chart}
+\section{December}
 
-\begin{center}
-\includegraphics[width=0.95\textwidth]{candidate_december.png}
-\end{center}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.74\textwidth]{candidate_december.png}
+\caption{Predicted rate for Lexington to Fort Wayne (360 miles, Dry Van, 32,000 lb) for each day of December 2025. The vertical axis does not start at zero.}
+\label{fig:dec}
+\end{figure}
 
-With lane, equipment, distance and weight fixed, only the date changes.  The model predicts \$809--\$831, highest on Thursdays and lowest on Sundays, matching the day-of-week pattern in the data.  The level matches the historical average for this lane in Dry Van (\$814).  The y-axis is zoomed in: the weekly swing is about $\pm$1.3\%.
+The 31 loads in Figure~\ref{fig:dec} are identical except for their date, so the curve shows only what the model learned about the calendar.
+As a result, the rate moves between \$809 and \$831, highest on Thursdays and lowest on Sundays, a swing of about $\pm$1.3\%.
+Its level stays near \$814, which is the historical Dry Van average for this route.
 
-\section{Limitations}
+\section{What the model cannot know}
 
-\begin{itemize}
-\item \textbf{Nov--Dec level.}  If prices in those months run 2--3\% above or below the yearly average, all predictions shift together.  No November or December is in the training data, and none of the given signals anticipates it.
-\item \textbf{Label errors in validation.}  If validation labels contain the same 1.4\% of entry errors, they will dominate squared-error metrics; the model targets the typical (median-like) rate.
-\end{itemize}
+The training year contains no November and no December, and none of the fields anticipates their price level.
+Since monthly levels moved by 7.7\% during the year, a shift of 2 or 3\% in either direction is plausible, and such a shift would move every prediction with it.
+The model has learned what a Thursday costs; what December costs, it has never seen.
+
+A second limit concerns the prices it will be judged against.
+If they contain typing errors in the same proportion as the training data, those errors will dominate any score that squares the misses, because the model predicts the typical rate of a load and makes no attempt to predict a typo.
 
 \end{document}
