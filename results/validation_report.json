@@ -1,0 +1,146 @@
+{
+  "time (Sep-Oct)": {
+    "n_train": 38477,
+    "n_test": 9523,
+    "all rows": {
+      "lane-median baseline": {
+        "MAE": 143.65,
+        "MAPE_%": 6.24
+      },
+      "final (no market_index, no quote_signal)": {
+        "MAE": 98.26,
+        "MAPE_%": 4.33
+      },
+      "+ market_index": {
+        "MAE": 171.96,
+        "MAPE_%": 7.25
+      },
+      "+ weekly market_index": {
+        "MAE": 121.93,
+        "MAPE_%": 5.29
+      },
+      "+ quote_signal": {
+        "MAE": 88.64,
+        "MAPE_%": 3.85
+      }
+    },
+    "clean rows": {
+      "lane-median baseline": {
+        "MAE": 88.15,
+        "MAPE_%": 3.74
+      },
+      "final (no market_index, no quote_signal)": {
+        "MAE": 42.24,
+        "MAPE_%": 1.81
+      },
+      "+ market_index": {
+        "MAE": 116.99,
+        "MAPE_%": 4.88
+      },
+      "+ weekly market_index": {
+        "MAE": 66.31,
+        "MAPE_%": 2.78
+      },
+      "+ quote_signal": {
+        "MAE": 32.54,
+        "MAPE_%": 1.33
+      }
+    }
+  },
+  "time + unseen cities": {
+    "n_train": 31270,
+    "n_test": 1740,
+    "all rows": {
+      "lane-median baseline": {
+        "MAE": 205.95,
+        "MAPE_%": 9.09
+      },
+      "final (no market_index, no quote_signal)": {
+        "MAE": 102.63,
+        "MAPE_%": 4.01
+      },
+      "+ market_index": {
+        "MAE": 180.88,
+        "MAPE_%": 7.08
+      },
+      "+ weekly market_index": {
+        "MAE": 126.6,
+        "MAPE_%": 4.99
+      },
+      "+ quote_signal": {
+        "MAE": 91.39,
+        "MAPE_%": 3.5
+      }
+    },
+    "clean rows": {
+      "lane-median baseline": {
+        "MAE": 151.66,
+        "MAPE_%": 7.11
+      },
+      "final (no market_index, no quote_signal)": {
+        "MAE": 46.57,
+        "MAPE_%": 1.96
+      },
+      "+ market_index": {
+        "MAE": 125.34,
+        "MAPE_%": 5.15
+      },
+      "+ weekly market_index": {
+        "MAE": 71.03,
+        "MAPE_%": 2.95
+      },
+      "+ quote_signal": {
+        "MAE": 35.36,
+        "MAPE_%": 1.44
+      }
+    }
+  },
+  "August (Nov-Dec-like quote_signal)": {
+    "n_train": 33718,
+    "n_test": 4759,
+    "all rows": {
+      "lane-median baseline": {
+        "MAE": 141.2,
+        "MAPE_%": 6.32
+      },
+      "final (no market_index, no quote_signal)": {
+        "MAE": 90.02,
+        "MAPE_%": 4.16
+      },
+      "+ market_index": {
+        "MAE": 116.24,
+        "MAPE_%": 5.22
+      },
+      "+ weekly market_index": {
+        "MAE": 117.09,
+        "MAPE_%": 5.29
+      },
+      "+ quote_signal": {
+        "MAE": 162.96,
+        "MAPE_%": 7.88
+      }
+    },
+    "clean rows": {
+      "lane-median baseline": {
+        "MAE": 92.03,
+        "MAPE_%": 3.92
+      },
+      "final (no market_index, no quote_signal)": {
+        "MAE": 39.9,
+        "MAPE_%": 1.7
+      },
+      "+ market_index": {
+        "MAE": 66.44,
+        "MAPE_%": 2.86
+      },
+      "+ weekly market_index": {
+        "MAE": 67.12,
+        "MAPE_%": 2.86
+      },
+      "+ quote_signal": {
+        "MAE": 114.31,
+        "MAPE_%": 5.57
+      }
+    }
+  }
+}

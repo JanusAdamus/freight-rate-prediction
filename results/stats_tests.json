@@ -1,0 +1,186 @@
+{
+  "model_comparisons": {
+    "final_vs_baseline_SepOct": {
+      "mean_daily_MAE_diff": 45.72,
+      "DM_z": 22.16,
+      "DM_p": 7.520979795436175e-109,
+      "wilcoxon_p": 1.1111647363502784e-11,
+      "n_days": 61,
+      "MAE_a": 88.15,
+      "MAE_b": 42.24
+    },
+    "final_vs_baseline_Aug": {
+      "mean_daily_MAE_diff": 52.36,
+      "DM_z": 57.71,
+      "DM_p": 0.0,
+      "wilcoxon_p": 9.313225746154785e-10,
+      "n_days": 31,
+      "MAE_a": 92.03,
+      "MAE_b": 39.9
+    },
+    "final_vs_plus_market_index_SepOct": {
+      "mean_daily_MAE_diff": 74.97,
+      "DM_z": 10.04,
+      "DM_p": 1.0260347810376352e-23,
+      "wilcoxon_p": 1.1111647363502784e-11,
+      "n_days": 61,
+      "MAE_a": 116.99,
+      "MAE_b": 42.24
+    },
+    "final_vs_plus_market_index_Aug": {
+      "mean_daily_MAE_diff": 26.68,
+      "DM_z": 5.64,
+      "DM_p": 1.7431170965566626e-08,
+      "wilcoxon_p": 9.313225746154785e-10,
+      "n_days": 31,
+      "MAE_a": 66.44,
+      "MAE_b": 39.9
+    },
+    "final_vs_plus_quote_signal_Aug": {
+      "mean_daily_MAE_diff": 74.7,
+      "DM_z": 40.0,
+      "DM_p": 0.0,
+      "wilcoxon_p": 9.313225746154785e-10,
+      "n_days": 31,
+      "MAE_a": 114.31,
+      "MAE_b": 39.9
+    }
+  },
+  "selection_independent_of_SepOct": {
+    "train<7 -> Jul-Aug": {
+      "mean_daily_MAE_diff": 1.26,
+      "DM_z": 1.65,
+      "DM_p": 0.09924623365433978,
+      "wilcoxon_p": 0.0008145947497626504,
+      "n_days": 62
+    },
+    "train<8 -> Aug": {
+      "mean_daily_MAE_diff": 5.63,
+      "DM_z": 24.65,
+      "DM_p": 3.725614440298243e-134,
+      "wilcoxon_p": 9.313225746154785e-10,
+      "n_days": 31
+    }
+  },
+  "repeated_unseen_cities": {
+    "draws": 20,
+    "final_MAE_mean": 46.37,
+    "final_MAE_min_max": [
+      40.39,
+      54.91
+    ],
+    "baseline_MAE_mean": 185.2,
+    "final_wins": 20,
+    "sign_test_p": 9.5367431640625e-07
+  },
+  "quote_signal": {
+    "train_month_1": {
+      "mean_daily_r": 0.985,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_2": {
+      "mean_daily_r": 0.984,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_3": {
+      "mean_daily_r": 0.985,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_4": {
+      "mean_daily_r": -0.967,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_5": {
+      "mean_daily_r": -0.966,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_6": {
+      "mean_daily_r": 0.984,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_7": {
+      "mean_daily_r": -0.967,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_8": {
+      "mean_daily_r": -0.021,
+      "share_days_p<0.05": 0.032
+    },
+    "train_month_9": {
+      "mean_daily_r": 0.985,
+      "share_days_p<0.05": 1.0
+    },
+    "train_month_10": {
+      "mean_daily_r": -0.964,
+      "share_days_p<0.05": 1.0
+    },
+    "validation_month_11": {
+      "mean_daily_r": 0.003,
+      "share_days_p<0.05": 0.133
+    },
+    "validation_month_12": {
+      "mean_daily_r": -0.011,
+      "share_days_p<0.05": 0.129
+    },
+    "validation_sig_days": "8/61",
+    "validation_sig_days_vs_5pct_binomial_p": 0.010784396372188596,
+    "KS_Aug_vs_validation_p": 0.9157803139408478,
+    "KS_Sep_vs_validation_p": 2.7213066098048453e-114
+  },
+  "outliers": {
+    "n_outliers_direct_months": 322,
+    "quote/lane median outliers vs normal": [
+      0.987,
+      0.994
+    ],
+    "quote/lane MannWhitney_p": 0.04167293795133635,
+    "posted/lane median outliers vs normal": [
+      2.389,
+      0.999
+    ],
+    "posted/lane |log| MannWhitney_p": 1.6414849986074314e-209
+  },
+  "negative_weight": {
+    "coef_log_abs_weight": 0.0616,
+    "coef_log_abs_weight_p": 0.0,
+    "coef_is_negative": -0.0004,
+    "coef_is_negative_p": 0.8412865950774159,
+    "n_negative": 283
+  },
+  "calendar": {
+    "season_KruskalWallis_p": 7.599545386819214e-45,
+    "season_range_pct": 7.66,
+    "dow_KruskalWallis_p": 1.023625788269208e-233,
+    "dow_range_pct": 1.71,
+    "holiday_jump_mean_pct": -0.444,
+    "holiday_jump_ttest_p": 0.09485187870995777
+  },
+  "adversarial": {
+    "AUC": 0.561,
+    "null_AUC_max": 0.506,
+    "permutation_p_upper_bound": 0.047619047619047616,
+    "AUC_without_coordinates": 0.509
+  },
+  "conformal_and_stability": {
+    "conformal_80": {
+      "half_width_pct": 3.12,
+      "Oct_coverage": 0.8267,
+      "binomial_p_coverage_below_nominal": 0.9999989767994278
+    },
+    "conformal_90": {
+      "half_width_pct": 4.31,
+      "Oct_coverage": 0.9287,
+      "binomial_p_coverage_below_nominal": 0.999999999998813
+    },
+    "seed_spread_pct_median": 0.278,
+    "seed_spread_pct_p99": 0.71
+  },
+  "holm_adjusted_primary": {
+    "DM final_vs_baseline_Aug": 0.0,
+    "DM final_vs_plus_quote_signal_Aug": 0.0,
+    "DM final_vs_baseline_SepOct": 3.00839191817447e-108,
+    "DM final_vs_plus_market_index_SepOct": 3.0781043431129056e-23,
+    "DM final_vs_plus_market_index_Aug": 3.486234193113325e-08,
+    "unseen cities sign test": 9.5367431640625e-07
+  }
+}

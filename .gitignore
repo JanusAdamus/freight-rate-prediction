@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# original files as delivered (copies with README names live in data/)
+/train-test.csv
+/validation.csv
+/validation-predictions-template.csv
+/december-chart-inputs.csv
+/freight-rate-ml-assessment-1-.pdf
+/readme.md
+
+# personal study notes, not part of the submission
+/docs/
